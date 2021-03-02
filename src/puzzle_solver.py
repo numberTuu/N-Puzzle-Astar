@@ -1,5 +1,4 @@
 import numpy as np
-import random
 
 class Node(object):
     def __init__(self, state, parent_node, g):
@@ -41,7 +40,7 @@ class Node(object):
         for i in new_blank:
             child = self.move_tile(self.state,x,y,i[0],i[1]) 
             if child is not None:
-                child_node = Node(child,self.state,self.g_score+1) # We pass in the current state as the parent node
+                child_node = Node(child,self.state,self.g_score+1) # We pass in the current state as the parent node, the g_score is the level i.e a counter for move taken
                 children.append(child_node)
         return children
 
@@ -56,6 +55,7 @@ class Puzzle(object):
     def f(self, curr, goal):
         return self.h(curr.state,goal) + curr.g_score
 
+    """ Find the actual location of the puzzle piece on the goal state board """
     def find_loc(self, state, val_to_find):
         for i in range(0,self.board_size):
             for j in range(0, self.board_size):
@@ -81,7 +81,7 @@ class Puzzle(object):
         linearConflict = 0
         for i in range(0,self.board_size):
             for j in range(0,self.board_size):
-                if curr[i][j] == 0: continue    # Just the blank state
+                if curr[i][j] == 0: continue    # Just the blank piece
                 num = curr[i][j]
                 correctPos = self.find_loc(goal,num)
                 if (i,j) == correctPos: continue    # The current tile is in the right spot
@@ -112,6 +112,7 @@ class Puzzle(object):
             """ If there is no difference between the goal node and the current node, we found the solution """
             if(self.h(curr.state,goal) == 0):
                 print(curr.state)   ## Debug
+                print(curr.g_score)
                 break
 
             """ Going through each child node to find their heurestic value """
@@ -129,9 +130,11 @@ class Puzzle(object):
 def main():
     """ Board Generation """
     goal_state = np.array([1,2,3,4,5,6,7,8,0]) #0 is the empty space
+
+    print("Please enter your starting puzzle board")
     start_state =  []
     for i in range(0,9):
-        temp = input().split(" ")
+        temp = int(input())
         start_state.append(temp)
     start_state = np.array(start_state) 
 
