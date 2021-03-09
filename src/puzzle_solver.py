@@ -1,3 +1,5 @@
+""" Thanks algorithmsinsight.wordpress.com 
+    Their insight really help with this program""" 
 import numpy as np
 
 class Node(object):
@@ -76,7 +78,7 @@ class Puzzle(object):
         temp += self.linear_conflict(curr,goal) 
         return temp
 
-    """ An attemp at linear conflic """
+    """ An attemp at linear conflict """
     def linear_conflict(self,curr,goal):
         linearConflict = 0
         for i in range(0,self.board_size):
@@ -97,6 +99,21 @@ class Puzzle(object):
         
         return 2 * linearConflict
 
+    """ Check for the existence of a state in the open list """
+    def check_exist_in_open(self,board_to_check):
+        for i in self.open_list:
+            if np.array_equal(board_to_check,i.state):       
+                return i
+        return None
+
+    """ Check for the existence of a state in the close list 
+        by checking the state and its g_score"""
+    def check_exist_in_closed(self,node_to_check):
+        for i in self.closed_list:
+            if i.g_score == node_to_check.g_score and np.array_equal(i.state,node_to_check.state) == True:
+                return True
+        return False
+
     """ The main puzzle solver """
     def solve_sliding_puzzle(self,start,goal):
         """ First Node """
@@ -105,45 +122,60 @@ class Puzzle(object):
 
         self.open_list.append(start)
 
-        """ May change this condition to open list is not empty """
-        while True:
-            curr = self.open_list[0]
+        while self.open_list:
+            curr = self.open_list[0] # node with the smallest f_score
+            print(curr.state)
 
-            """ If there is no difference between the goal node and the current node, we found the solution """
             if(self.h(curr.state,goal) == 0):
                 print(curr.state)   ## Debug
-                print(curr.g_score)
+                print("Took " + str(curr.g_score) + " moves")
                 break
 
-            """ Going through each child node to find their heurestic value """
+            self.open_list.pop(0)                
+            self.closed_list.append(curr)
+
             for i in curr.generate_child():
-                i.f_score = self.f(i,goal)
-                self.open_list.append(i)    # Putting the node into the open list
+                if self.check_exist_in_closed(i) == True:   # Already in closed list, we skip
+                    continue
+                else:             
+                    # First we see if the state already exist in the open list
+                    # If it is not, then we simply append that to the open list
+                    check_node = self.check_exist_in_open(i.state)
+                    if check_node is None:
+                        i.f_score = self.f(i,goal)
+                        self.open_list.append(i)
+                    else:
+                        if(check_node.g_score < i.g_score):         # No need to overwrite the state
+                            check_node.g_score = i.g_score
+                            check_node.parent_node = i.parent_node
+                            check_node.f_score = self.f(i,goal)
 
-            self.closed_list.append(curr)   # Moving the parent node to the closed list
-            self.open_list.pop(0)
-
-            """ Now we sort the open list based on the f_score """
             self.open_list.sort(key= lambda x:x.f_score,reverse=False)
 
 # Doing 3x3 puzzle
 def main():
     """ Board Generation """
-    goal_state = np.array([1,2,3,4,5,6,7,8,0]) #0 is the empty space
+    goal_state = np.array([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0]) #0 is the empty space
 
     print("Please enter your starting puzzle board")
     start_state =  []
-    for i in range(0,9):
+    for i in range(0,16):
         temp = int(input())
         start_state.append(temp)
+
+    print('Thanks for the input')
     start_state = np.array(start_state) 
 
     """ Reshape the array """
-    goal_state = np.reshape(goal_state,(3,3))
-    start_state = np.reshape(start_state,(3,3))
+    goal_state = np.reshape(goal_state,(4,4))
+    start_state = np.reshape(start_state,(4,4))
+
+    """ May have to check if the user input start board is solvable or not """
 
     """ Initialize the puzzle """
-    puzzle =  Puzzle(3)
+    puzzle =  Puzzle(4)
+
+    """ Solve the solvable puzzle """  
     puzzle.solve_sliding_puzzle(start_state,goal_state)
 
 if __name__ == '__main__':
