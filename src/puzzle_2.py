@@ -1,6 +1,3 @@
-""" Thanks algorithmsinsight.wordpress.com 
-    Their insight really help with this program""" 
-
 import numpy as np
 
 class Node(object):
@@ -79,7 +76,7 @@ class Puzzle(object):
         temp += self.linear_conflict(curr,goal) 
         return temp
 
-    """ An attemp at linear conflict """
+    """ An attemp at linear conflic """
     def linear_conflict(self,curr,goal):
         linearConflict = 0
         for i in range(0,self.board_size):
@@ -89,31 +86,16 @@ class Puzzle(object):
                 correctPos = self.find_loc(goal,num)
                 if (i,j) == correctPos: continue    # The current tile is in the right spot
                 if i == correctPos[0]:  # if we're in the correct row
-                    for column in range(j+1,self.board_size):
+                    for fromCol in range(j+1,self.board_size):
                         """ We checking the conflict on the same row"""
-                        if num > curr[i][column] and self.find_loc(goal, curr[i][column])[0] == i:
+                        if num > curr[i][fromCol] and self.find_loc(goal, curr[i][fromCol])[0] == i:
                             linearConflict += 1
                 elif j == correctPos[1]:    # if we're in the correct column                            
-                    for row in range(i+1,self.board_size):
-                        if num > curr[row][j] and self.find_loc(goal, curr[row][j])[1] == j:
+                    for fromRow in range(i+1,self.board_size):
+                        if num > curr[fromRow][j] and self.find_loc(goal, curr[fromRow][j])[1] == j:
                             linearConflict += 1
         
         return 2 * linearConflict
-
-    """ Check for the existence of a state in the open list """
-    def check_exist_in_open(self,board_to_check):
-        for i in self.open_list:
-            if np.array_equal(board_to_check,i.state):       
-                return i
-        return None
-
-    """ Check for the existence of a state in the close list 
-        by checking the state and its g_score"""
-    def check_exist_in_closed(self,node_to_check):
-        for i in self.closed_list:
-            if i.g_score == node_to_check.g_score and np.array_equal(i.state,node_to_check.state) == True:
-                return True
-        return False
 
     """ The main puzzle solver """
     def solve_sliding_puzzle(self,start,goal):
@@ -123,34 +105,26 @@ class Puzzle(object):
 
         self.open_list.append(start)
 
-        while self.open_list:
-            curr = self.open_list[0] # node with the smallest f_score
+        """ May change this condition to open list is not empty """
+        while True:
+            curr = self.open_list[0]
             print(curr.state)
 
+            """ If there is no difference between the goal node and the current node, we found the solution """
             if(self.h(curr.state,goal) == 0):
                 print(curr.state)   ## Debug
-                print("Took " + str(curr.g_score) + " moves")
+                print(curr.g_score)
                 break
 
-            self.open_list.pop(0)                
-            self.closed_list.append(curr)
-
+            """ Going through each child node to find their heurestic value """
             for i in curr.generate_child():
                 i.f_score = self.f(i,goal)
-                if self.check_exist_in_closed(i) == True:   # Already in closed list, we skip
-                    continue
-                else:             
-                    # First we see if the state already exist in the open list
-                    # If it is not, then we simply append that to the open list
-                    check_node = self.check_exist_in_open(i.state)
-                    if check_node is None:
-                        self.open_list.append(i)
-                    else:
-                        if(check_node.g_score < i.g_score):         # No need to overwrite the state
-                            check_node.g_score = i.g_score
-                            check_node.parent_node = i.parent_node
-                            check_node.f_score = i.f_score
+                self.open_list.append(i)    # Putting the node into the open list
 
+            self.closed_list.append(curr)   # Moving the parent node to the closed list
+            self.open_list.pop(0)
+
+            """ Now we sort the open list based on the f_score """
             self.open_list.sort(key= lambda x:x.f_score,reverse=False)
 
 # Doing 3x3 puzzle
@@ -163,20 +137,14 @@ def main():
     for i in range(0,16):
         temp = int(input())
         start_state.append(temp)
-
-    print('Thanks for the input')
     start_state = np.array(start_state) 
 
     """ Reshape the array """
     goal_state = np.reshape(goal_state,(4,4))
     start_state = np.reshape(start_state,(4,4))
 
-    """ May have to check if the user input start board is solvable or not """
-
     """ Initialize the puzzle """
     puzzle =  Puzzle(4)
-
-    """ Solve the solvable puzzle """  
     puzzle.solve_sliding_puzzle(start_state,goal_state)
 
 if __name__ == '__main__':
